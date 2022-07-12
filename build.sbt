@@ -24,8 +24,8 @@ lazy val root = (project in file("."))
             "org.typelevel" %%% "cats-effect-std" % catsEffectVersion,
             "co.fs2" %%% "fs2-core"  % fs2Version,
             "co.fs2" %%% "fs2-io" % fs2Version,
-            "org.scala-js" %%% "scala-js-macrotask-executor" % "1.0.0",
-            "com.github.cornerman" %%% "colibri-router" % "0.5.0", // TODO: Get rid of this dependency
+            "org.http4s" %%% "http4s-dsl" % "0.23.13",
+            "org.scala-js" %%% "scalajs-dom" % "2.2.0",
         ),
         addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
     )

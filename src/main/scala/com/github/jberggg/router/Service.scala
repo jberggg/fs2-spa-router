@@ -1,7 +1,7 @@
 package com.github.jberggg.router
 
 import cats.implicits._
-import com.github.jberggg.router.Domain._
+import org.http4s.Uri.Path
 
 import org.scalajs.dom.window
 import cats.effect.std.Dispatcher
@@ -25,7 +25,7 @@ object Service {
         paths      <- c.stream
     } yield paths
 
-    private def getCurrentLocation[F[_] : Async]: F[Path] = Async[F].delay(Path(window.location.hash.tail))
+    private def getCurrentLocation[F[_] : Async]: F[Path] = Async[F].delay(Path.unsafeFromString(window.location.hash.tail))
 
     private def addHashChangeListener[ F[_] : Async ](callback: Event => Unit): F[Unit] =  
         Async[F].delay( window.addEventListener(

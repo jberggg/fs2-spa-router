@@ -6,7 +6,7 @@ import org.scalajs.dom.window
 import cats.Monad
 import fs2.concurrent.Channel
 import fs2.Stream
-import com.github.jberggg.router.Domain._
+import org.http4s.Uri.Path
 
 trait RouterDsl[F[_]] {
 
@@ -25,7 +25,7 @@ object RouterDsl {
             .streamAndRegisterEventListener
             
         override def navigate(to: Path): F[Unit] = for {
-            _ <- Async[F].delay( window.location.hash = (to.pathString) )
+            _ <- Async[F].delay( window.location.hash = (to.renderString) )
             _ <- pathChannel.send(to)
         } yield ()
 
