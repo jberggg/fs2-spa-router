@@ -1,7 +1,7 @@
-package `scalajs-fs2-router`
+package com.github.jberggg.spa.router
 
 import cats.implicits._
-import colibri.router.Path
+import com.github.jberggg.spa.router.Domain._
 
 import org.scalajs.dom.window
 import cats.effect.std.Dispatcher
@@ -18,9 +18,9 @@ object Service {
         _           <- channel.send(location)
     } yield channel
 
-    private[`scalajs-fs2-router`] def registerEventHandler[ F[_] : Async ](c: Channel[F, Path]): Stream[F, Path] = for {
+    private[router] def registerEventHandler[ F[_] : Async ](c: Channel[F, Path]): Stream[F, Path] = for {
         dispatcher <- Stream.resource(Dispatcher[F])
-        callback   = (_: Event) => dispatcher.unsafeRunAndForget( getCurrentLocation[F].flatMap( l => c.send(l) ) )
+        callback   =  (_: Event) => dispatcher.unsafeRunAndForget( getCurrentLocation[F].flatMap( l => c.send(l) ) )
         _          <- Stream.resource(Resource.make(addHashChangeListener[F](callback))(_ => removeHashChangeListener[F](callback)))
         paths      <- c.stream
     } yield paths

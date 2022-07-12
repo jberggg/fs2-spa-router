@@ -1,3 +1,4 @@
+ThisBuild / organization := "com.github.jberggg"
 ThisBuild / scalaVersion := "2.13.5"
 
 ThisBuild / scalacOptions ++= List(
@@ -16,7 +17,7 @@ val fs2Version = "3.2.9"
 
 lazy val root = (project in file("."))
     .settings(
-        name := "scalajs-fs2-router",
+        name := "spa-router",
         libraryDependencies ++= Seq(
             "org.typelevel" %%% "cats-effect" % catsEffectVersion,
             "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion,

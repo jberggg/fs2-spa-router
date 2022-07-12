@@ -1,19 +1,18 @@
-package `scalajs-fs2-router`
+package com.github.jberggg.spa.router
 
 import cats.implicits._
 import cats.effect.Async
-import Domain.Page
 import org.scalajs.dom.window
 import cats.Monad
 import fs2.concurrent.Channel
 import fs2.Stream
-import colibri.router.Path
+import com.github.jberggg.spa.router.Domain._
 
 trait RouterDsl[F[_]] {
 
-    def requestedPageStream: Stream[F, Page]
+    def requestedPageStream: Stream[F, Path]
 
-    def navigate(to: Page): F[Unit]
+    def navigate(to: Path): F[Unit]
 
 }
 
@@ -21,14 +20,13 @@ object RouterDsl {
 
     def interpreter[ F[_] : Async ](pathChannel: Channel[F, Path]): RouterDsl[F] = new RouterDsl[F] {
            
-        override def requestedPageStream: Stream[F,Page] = 
+        override def requestedPageStream: Stream[F,Path] = 
             pathChannel
             .streamAndRegisterEventListener
-            .map( Domain.Page.fromPath(_) )
             
-        override def navigate(to: Page): F[Unit] = for {
-            _ <- Async[F].delay( window.location.hash = (Page.toPath(to).pathString) )
-            _ <- pathChannel.send(Page.toPath(to))
+        override def navigate(to: Path): F[Unit] = for {
+            _ <- Async[F].delay( window.location.hash = (to.pathString) )
+            _ <- pathChannel.send(to)
         } yield ()
 
     }
