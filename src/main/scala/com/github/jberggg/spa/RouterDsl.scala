@@ -1,4 +1,4 @@
-package com.github.jberggg.spa.router
+package com.github.jberggg.router
 
 import cats.implicits._
 import cats.effect.Async
@@ -6,7 +6,7 @@ import org.scalajs.dom.window
 import cats.Monad
 import fs2.concurrent.Channel
 import fs2.Stream
-import com.github.jberggg.spa.router.Domain._
+import com.github.jberggg.router.Domain._
 
 trait RouterDsl[F[_]] {
 

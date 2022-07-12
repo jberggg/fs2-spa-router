@@ -17,7 +17,7 @@ val fs2Version = "3.2.9"
 
 lazy val root = (project in file("."))
     .settings(
-        name := "spa-router",
+        name := "fs2-spa-router",
         libraryDependencies ++= Seq(
             "org.typelevel" %%% "cats-effect" % catsEffectVersion,
             "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion,

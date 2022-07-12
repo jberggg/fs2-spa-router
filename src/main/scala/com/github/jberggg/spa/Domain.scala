@@ -1,4 +1,4 @@
-package com.github.jberggg.spa.router
+package com.github.jberggg.router
 
 import java.util.UUID
 import scala.util.Try

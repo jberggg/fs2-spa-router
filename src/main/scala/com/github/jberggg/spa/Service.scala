@@ -1,7 +1,7 @@
-package com.github.jberggg.spa.router
+package com.github.jberggg.router
 
 import cats.implicits._
-import com.github.jberggg.spa.router.Domain._
+import com.github.jberggg.router.Domain._
 
 import org.scalajs.dom.window
 import cats.effect.std.Dispatcher
