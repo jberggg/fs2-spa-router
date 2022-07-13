@@ -11,6 +11,13 @@ Simple scalajs router for Single Page web-applications based on *fs2* using
 **Note**: CI/CD is not yet in place, you need to checkout the project and build 
 it yourself with `sbt publishLocal`.
 
+The router operates on the (location-hash)[https://developer.mozilla.org/en-US/docs/Web/API/Location/hash] 
+as most SPAs do when they support routing. When you setup the fs2 `Channel` with the helper function
+``setupInfrastructure` of the Service, the router will load the supplied path at startup.
+The router will also send an updated path when location hash gets changed in the browser. With the `navigate`
+method of the `RouterDsl` you can navigate from within your app e.g. when the user clicks a link or presses
+a button.
+
 You can use the `RouterDSL` and `Service` to setup the routing like so:
 
 ```scala
