@@ -11,7 +11,7 @@ import Domain._
 
 trait RouterDsl[F[_]] {
 
-    def requestedPageStream: Stream[F, Path]
+    def requestedPaths: Stream[F, Path]
 
     def navigate(to: Path): F[Unit]
 
@@ -20,7 +20,7 @@ trait RouterDsl[F[_]] {
 object RouterDsl {
     def interpreter[ F[_] : Async ](pathChannel: Channel[F, Path]): RouterDsl[F] = new RouterDsl[F] {
            
-        override def requestedPageStream: Stream[F,Path] = pathChannel.streamAndRegisterEventListener
+        override def requestedPaths: Stream[F,Path] = pathChannel.streamAndRegisterEventListener
             
         override def navigate(to: Path): F[Unit] =
             Async[F].delay( window.location.hash = (to.renderString) ) *>
