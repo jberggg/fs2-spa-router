@@ -5,7 +5,7 @@ Simple scalajs router for Single Page web-applications based on *fs2* using
 
 
 ```scala
-    "com.github.jberggg" %%% "fs2-spa-router" % "0.1.0-SNAPSHOT"
+"com.github.jberggg" %%% "fs2-spa-router" % "0.1.0-SNAPSHOT"
 ```
 
 **Note**: CI/CD is not yet in place, you need to checkout the project and build 
