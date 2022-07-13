@@ -18,7 +18,7 @@ object Service {
         _           <- channel.send(location)
     } yield channel
 
-    private[router] def registerEventHandler[ F[_] : Async ](c: Channel[F, Path]): Stream[F, Path] = for {
+    private[router] def registerEventHandlerAndToStream[ F[_] : Async ](c: Channel[F, Path]): Stream[F, Path] = for {
         dispatcher <- Stream.resource(Dispatcher[F])
         callback   =  (_: Event) => dispatcher.unsafeRunAndForget( getCurrentLocation[F].flatMap( l => c.send(l) ) )
         _          <- Stream.resource(Resource.make(addHashChangeListener[F](callback))(_ => removeHashChangeListener[F](callback)))
