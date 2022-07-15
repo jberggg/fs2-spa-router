@@ -3,7 +3,6 @@
 Simple scalajs router for Single Page web-applications based on *fs2* using 
 *http4s-dsl*'s `Path` to calculate and represent routes.
 
-
 ```scala
 "com.github.jberggg" %%% "fs2-spa-router" % "0.1.0-SNAPSHOT"
 ```
@@ -21,9 +20,9 @@ a button.
 You can use the `RouterDSL` and `Service` to setup the routing like so:
 
 ```scala
-import com.github.jberggg.router.{Service => RouterService, RouterDsl}
 import org.http4s._, org.http4s.dsl.io._, org.http4s.implicits._
-import cats.implicits._
+import cats.syntax.all._
+import com.github.jberggg.router.{Service => RouterService, RouterDsl}
 /* ... plus some more imports */
 
 object MyApp {

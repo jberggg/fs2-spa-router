@@ -1,6 +1,6 @@
 package com.github.jberggg.router
 
-import cats.implicits._
+import cats.syntax.all._
 import cats.effect.Async
 import org.scalajs.dom.window
 import fs2.concurrent.Channel

@@ -23,7 +23,6 @@ lazy val root = (project in file("."))
             "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion,
             "org.typelevel" %%% "cats-effect-std" % catsEffectVersion,
             "co.fs2" %%% "fs2-core"  % fs2Version,
-            "co.fs2" %%% "fs2-io" % fs2Version,
             "org.http4s" %%% "http4s-dsl" % "0.23.13",
             "org.scala-js" %%% "scalajs-dom" % "2.2.0",
         ),

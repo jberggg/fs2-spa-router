@@ -1,14 +1,13 @@
 package com.github.jberggg.router
 
-import cats.implicits._
-import org.http4s.Uri.Path
-
-import org.scalajs.dom.window
+import cats.syntax.all._
+import cats.effect.kernel.{Async, Resource}
 import cats.effect.std.Dispatcher
-import org.scalajs.dom.Event
+import org.http4s.Uri.Path
 import fs2.concurrent.Channel
 import fs2._
-import cats.effect.kernel.{Async, Resource}
+import org.scalajs.dom.window
+import org.scalajs.dom.Event
 
 object Service {
   
