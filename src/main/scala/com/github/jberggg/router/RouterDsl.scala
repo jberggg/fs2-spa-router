@@ -1,6 +1,5 @@
 package com.github.jberggg.router
 
-import cats.syntax.all._
 import cats.effect.Async
 import fs2.Stream
 import fs2.concurrent.SignallingRef
@@ -22,9 +21,7 @@ object RouterDsl {
            
         override def requestedPaths: Stream[F,Path] = pathSignal.streamAndRegisterEventListener
             
-        override def navigate(to: Path): F[Unit] =
-            Async[F].delay( window.location.hash = (to.renderString) ) *>
-            pathSignal.set(to).void
+        override def navigate(to: Path): F[Unit] = Async[F].delay( window.location.hash = (to.renderString) ) 
 
     }
 
