@@ -2,10 +2,10 @@ package com.github.jberggg.router
 
 import cats.syntax.all._
 import cats.effect.Async
-import org.scalajs.dom.window
-import fs2.concurrent.Channel
 import fs2.Stream
+import fs2.concurrent.SignallingRef
 import org.http4s.Uri.Path
+import org.scalajs.dom.window
 
 import Domain._
 
@@ -18,13 +18,13 @@ trait RouterDsl[F[_]] {
 }
 
 object RouterDsl {
-    def interpreter[ F[_] : Async ](pathChannel: Channel[F, Path]): RouterDsl[F] = new RouterDsl[F] {
+    def interpreter[ F[_] : Async ](pathSignal: SignallingRef[F, Path]): RouterDsl[F] = new RouterDsl[F] {
            
-        override def requestedPaths: Stream[F,Path] = pathChannel.streamAndRegisterEventListener
+        override def requestedPaths: Stream[F,Path] = pathSignal.streamAndRegisterEventListener
             
         override def navigate(to: Path): F[Unit] =
             Async[F].delay( window.location.hash = (to.renderString) ) *>
-            pathChannel.send(to).void
+            pathSignal.set(to).void
 
     }
 
