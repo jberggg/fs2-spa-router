@@ -8,22 +8,20 @@ import fs2._
 import fs2.concurrent.SignallingRef
 import org.scalajs.dom.window
 import org.scalajs.dom.HashChangeEvent
+import scala.scalajs.js
+import cats.Applicative
 
 object Service {
   
     def setupInfrastructure[F[_] : Async ]: F[SignallingRef[F, Path]] = 
         Async[F].delay( window.location.hash.tail )
-                .map( location => if(location ==="") "/" else location  )
-                .flatMap( location => SignallingRef[F,Path]( Path.unsafeFromString(location) ) )
+        .map( location => if(location ==="") "/" else location  )
+        .flatMap( location => SignallingRef[F,Path]( Path.unsafeFromString(location) ) )
 
     private[router] def registerEventHandlerAndToStream[ F[_] : Async ](s: SignallingRef[F, Path]): Stream[F, Path] = for {
         dispatcher <- Stream.resource(Dispatcher[F])
-        callback   =  (e: HashChangeEvent) =>  dispatcher.unsafeRunAndForget( 
-                                                    extractLocationHash(e.newURL)
-                                                    .map( locationHash => s.set(Path.unsafeFromString(locationHash)) )
-                                                    .getOrElse( ().pure[F] )
-                                                )
-        _          <- Stream.resource(Resource.make(addHashChangeListener[F](callback))(_ => removeHashChangeListener[F](callback)))
+        callback   = assembleCallback[F](s,dispatcher)
+        _          <- Stream.resource( Resource.make( addHashChangeListener(callback) )( _ => removeHashChangeListener[F](callback) ) )
         paths      <- s.discrete
     } yield paths
 
@@ -33,14 +31,22 @@ object Service {
         case _ => None
     }
 
-    private def addHashChangeListener[ F[_] : Async ](callback: HashChangeEvent => Unit): F[Unit] =  
+    private def assembleCallback[F[_] : Applicative ](s: SignallingRef[F, Path], d: Dispatcher[F]) = (
+        (e: HashChangeEvent) => d.unsafeRunAndForget( 
+            extractLocationHash(e.newURL)
+            .map( locationHash => s.set(Path.unsafeFromString(locationHash)) )
+            .getOrElse( ().pure[F] )
+        )
+    ): js.Function1[HashChangeEvent,Unit]
+
+    private def addHashChangeListener[ F[_] : Async ](callback: js.Function1[HashChangeEvent,Unit]): F[Unit] =  
         Async[F].delay( window.addEventListener(
             `type` = "hashchange", 
             listener = callback,
             useCapture = true
         ))
 
-    private def removeHashChangeListener[ F[_] : Async ](originalCallback: HashChangeEvent => Unit): F[Unit] =
+    private def removeHashChangeListener[ F[_] : Async ](originalCallback: js.Function1[HashChangeEvent,Unit]): F[Unit] =
         Async[F].delay( window.removeEventListener(
             `type` = "hashchange", 
             listener = originalCallback
