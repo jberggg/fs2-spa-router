@@ -1,17 +1,17 @@
 package com.github.jberggg.router
 
-import cats.effect.kernel.Async
-import cats.Monad
-import fs2.Stream
-import fs2.concurrent.SignallingRef
-import org.http4s.Uri.Path
+import scala.scalajs.js.{Object => JsObject}
 
 object Domain {
 
-    implicit class PathChannelSyntax[F[_] : Monad : Async ](c: SignallingRef[F, Path]){
+    type BrowserHistoryState = Either[UnhandledHistoryState,HistoryState]
 
-        def streamAndRegisterEventListener: Stream[F, Path] = Service.registerEventHandlerAndToStream[F](c)
+    trait HistoryState
 
+    final case class UnhandledHistoryState(state: Any)
+
+    implicit class ObjectSyntax(self: Object){
+        def toJsObject: JsObject = JsObject.apply(self)
     }
   
 }
