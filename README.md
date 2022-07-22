@@ -10,28 +10,33 @@ Simple scalajs router for Single Page web-applications based on *fs2* using
 **Note**: CI/CD is not yet in place, you need to checkout the project and build 
 it yourself with `sbt publishLocal`.
 
-The router operates on the [location-hash](https://developer.mozilla.org/en-US/docs/Web/API/Location/hash) 
-as most SPAs do when they support routing. When you setup the fs2 `Channel` with the helper function
-`setupInfrastructure` of the Service, the router will load the supplied path at startup.
-The router will also send an updated path when location hash gets changed in the browser. With the `navigate`
-method of the `RouterDsl` you can navigate from within your app e.g. when the user clicks a link or presses
-a button.
+## How it works
 
-You can use the `RouterDSL` and `Service` to setup the routing like so:
+The router is built upon the `History API` which allows to route on regular
+looking paths rather then a path section delimited by a `#`. When navigating
+from within the SPA app, the path and optional state is pushed to the `History API`.
+When the user presses the back button, the router will receive the previous path
+and state which then can be used to reconstruct the view.
+
+## How to use
+
+You can use the `RouterDSL` and `RouterService` to setup the routing like so:
 
 ```scala
 import org.http4s._, org.http4s.dsl.io._, org.http4s.implicits._
 import cats.syntax.all._
-import com.github.jberggg.router.{Service => RouterService, RouterDsl}
+import com.github.jberggg.router.{RouterService, RouterDsl}
 /* ... plus some more imports */
 
 object MyApp {
 
     def run[F[_] : Monad : Async ]: F[ExitCode] =
 
-        RouterService.setupInfrastructure[F].flatMap{ pathChannel =>    
+        RouterService.createRouterResourcesStandalone[F].use{ pathSignal =>    
                     
-          implicit val routerDslInterpreter = RouterDsl.interpreter(pathChannel)
+          // or us the Signal directly by consuming it with `discrete` 
+          // and add new path and state with `set`
+          implicit val routerDslInterpreter = RouterDsl(pathSignal)
 
           render[F]
 
@@ -42,6 +47,7 @@ object MyApp {
 
         RouterDsl[F]
         .requestedPaths
+        .discrete
         .map( path =>
 
             path match {
@@ -58,3 +64,12 @@ object MyApp {
 }
 
 ```
+
+### Outwatch
+
+If you want to use the router with [Outwatch](https://github.com/outwatch/outwatch) you
+need to ensure, that you lift the resources into the same stream as the one that produces
+your dynamic content. So you would first create the signal with `createPathSignal` and then
+at the start of the content stream you will need to lift `createRouterResources` into
+the stream with `Stream.resource`. This ensures that the event handler are not prematurely
+terminated. A code example will follow...

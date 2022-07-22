@@ -12,28 +12,28 @@ import scala.scalajs.js
 import org.scalajs.dom.PopStateEvent
 import Domain._
 
-object Service {
+object RouterService {
   
-    def createRouterDsl[F[_] : Async ](initialState: js.Any): Resource[F,RouterDsl[F]] = for {
+    def createRouterResourcesStandalone[F[_] : Async ](initialState: HistoryApiState): Resource[F,SignallingRef[F,Tuple2[Path,HistoryApiState]]] = for {
         s <- Resource.eval(createPathSignal[F](initialState))
         _ <- createRouterResources[F](s)
-    } yield RouterDsl.interpreter(s)
+    } yield s
 
-    def createPathSignal[F[_] : Async ](initialState: js.Any): F[SignallingRef[F,Tuple2[Path,js.Any]]] = 
-        Async[F]
-        .delay( window.location.href )
-        .map( Uri.unsafeFromString )
-        .map( u => Tuple2(u.path, initialState) )
-        .flatTap{ case (p,s) => Async[F].delay(window.history.replaceState(s.toJsObject,"",p.toString)) } // set initial state in History API
-        .flatMap{ SignallingRef.apply[F,Tuple2[Path,js.Any]] }
-
-    def createRouterResources[F[_] : Async ](signal: SignallingRef[F,Tuple2[Path,js.Any]]): Resource[F,Unit] = for {
+    def createRouterResources[F[_] : Async ](signal: SignallingRef[F,Tuple2[Path,HistoryApiState]]): Resource[F,Unit] = for {
         d <- Dispatcher[F]
         _ <- registerEventListener[F](d,signal)
         _ <- createStatePusher[F](signal)
     } yield ()
 
-    def createStatePusher[ F[_] : Async ](s: SignallingRef[F,Tuple2[Path,js.Any]]): Resource[F,Unit] = 
+    def createPathSignal[F[_] : Async ](initialState: HistoryApiState): F[SignallingRef[F,Tuple2[Path,HistoryApiState]]] = 
+        Async[F]
+        .delay( window.location.href )
+        .map( Uri.unsafeFromString )
+        .map( u => Tuple2(u.path, initialState) )
+        .flatTap{ case (p,s) => Async[F].delay(window.history.replaceState(s.toJsObject,"",p.toString)) } // set initial state in History API
+        .flatMap{ SignallingRef.apply[F,Tuple2[Path,HistoryApiState]] }
+
+    def createStatePusher[ F[_] : Async ](s: SignallingRef[F,Tuple2[Path,HistoryApiState]]): Resource[F,Unit] = 
         s.discrete
         .evalMap{ case (p,st) => Async[F].delay( window.history.pushState( st.toJsObject, "", p.toString ) ) }
         .compile
@@ -41,12 +41,12 @@ object Service {
         .background
         .void
 
-    def registerEventListener[F[_] : Async](d: Dispatcher[F], s: SignallingRef[F,Tuple2[Path,js.Any]]): Resource[F,Unit] = 
+    def registerEventListener[F[_] : Async](d: Dispatcher[F], s: SignallingRef[F,Tuple2[Path,HistoryApiState]]): Resource[F,Unit] = 
         Resource
         .make( assembleCallback[F](s,d).pure[F] )( removeHashChangeListener[F] )
         .evalMap( addHashChangeListener[F] )
 
-    private def assembleCallback[F[_] : Async ](s: SignallingRef[F, Tuple2[Path, js.Any]], d: Dispatcher[F]) = (
+    private def assembleCallback[F[_] : Async ](s: SignallingRef[F, Tuple2[Path,HistoryApiState]], d: Dispatcher[F]) = (
         (e: PopStateEvent) => d.unsafeRunAndForget{
             Async[F].delay(window.location.href)
             .map( Uri.unsafeFromString )

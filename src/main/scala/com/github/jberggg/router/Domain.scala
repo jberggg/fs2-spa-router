@@ -1,14 +1,10 @@
 package com.github.jberggg.router
 
-import scala.scalajs.js.{Object => JsObject}
+import scala.scalajs.js.{Object => JsObject, Any => JsAny}
 
 object Domain {
 
-    type BrowserHistoryState = Either[UnhandledHistoryState,HistoryState]
-
-    trait HistoryState
-
-    final case class UnhandledHistoryState(state: Any)
+    type HistoryApiState = JsAny
 
     implicit class ObjectSyntax(self: Object){
         def toJsObject: JsObject = JsObject.apply(self)

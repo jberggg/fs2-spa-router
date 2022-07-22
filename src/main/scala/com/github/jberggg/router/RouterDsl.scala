@@ -2,20 +2,20 @@ package com.github.jberggg.router
 
 import fs2.concurrent.SignallingRef
 import org.http4s.Uri.Path
-import scala.scalajs.js
+import Domain._
 
 trait RouterDsl[F[_]] {
 
-    def requestedPaths: SignallingRef[F, Tuple2[Path,js.Any]]
+    def requestedPaths: SignallingRef[F, Tuple2[Path,HistoryApiState]]
 
-    def navigate(to: Path, withState: js.Any): F[Unit] = requestedPaths.set(Tuple2(to,withState))
+    def navigate(to: Path, withState: HistoryApiState): F[Unit] = requestedPaths.set(Tuple2(to,withState))
 
 }
 
 object RouterDsl {
-    def interpreter[ F[_] ](pathSignal: SignallingRef[F, Tuple2[Path,js.Any]]): RouterDsl[F] = new RouterDsl[F] {
+    def interpreter[ F[_] ](pathSignal: SignallingRef[F, Tuple2[Path,HistoryApiState]]): RouterDsl[F] = new RouterDsl[F] {
            
-        override def requestedPaths: SignallingRef[F, Tuple2[Path,js.Any]] = pathSignal
+        override def requestedPaths: SignallingRef[F, Tuple2[Path,HistoryApiState]] = pathSignal
 
     }
 
