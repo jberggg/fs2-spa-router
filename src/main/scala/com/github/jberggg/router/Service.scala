@@ -15,21 +15,25 @@ import Domain._
 object Service {
   
     def createRouterDsl[F[_] : Async ](initialState: js.Any): Resource[F,RouterDsl[F]] = for {
-        d <- Dispatcher[F]
-        s <- Resource.eval(setupSignal[F](initialState))
-        _ <- registerEventListener[F](d,s)
-        _ <- setupStatePusher[F](s)
+        s <- Resource.eval(createPathSignal[F](initialState))
+        _ <- createRouterResources[F](s)
     } yield RouterDsl.interpreter(s)
 
-    def setupSignal[F[_] : Async ](initialState: js.Any): F[SignallingRef[F,Tuple2[Path,js.Any]]] = 
+    def createPathSignal[F[_] : Async ](initialState: js.Any): F[SignallingRef[F,Tuple2[Path,js.Any]]] = 
         Async[F]
         .delay( window.location.href )
         .map( Uri.unsafeFromString )
         .map( u => Tuple2(u.path, initialState) )
-        .flatTap{ case (p,s) => Async[F].delay(window.history.replaceState(s.toJsObject,"",p.toString)) }
-        .flatMap{ case (p,s) => SignallingRef.apply[F,Tuple2[Path,js.Any]](Tuple2.apply(p,s)) }
+        .flatTap{ case (p,s) => Async[F].delay(window.history.replaceState(s.toJsObject,"",p.toString)) } // set initial state in History API
+        .flatMap{ SignallingRef.apply[F,Tuple2[Path,js.Any]] }
 
-    def setupStatePusher[ F[_] : Async ](s: SignallingRef[F,Tuple2[Path,js.Any]]): Resource[F,Unit] = 
+    def createRouterResources[F[_] : Async ](signal: SignallingRef[F,Tuple2[Path,js.Any]]): Resource[F,Unit] = for {
+        d <- Dispatcher[F]
+        _ <- registerEventListener[F](d,signal)
+        _ <- createStatePusher[F](signal)
+    } yield ()
+
+    def createStatePusher[ F[_] : Async ](s: SignallingRef[F,Tuple2[Path,js.Any]]): Resource[F,Unit] = 
         s.discrete
         .evalMap{ case (p,st) => Async[F].delay( window.history.pushState( st.toJsObject, "", p.toString ) ) }
         .compile
