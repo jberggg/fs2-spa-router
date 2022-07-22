@@ -14,10 +14,11 @@ import cats.NonEmptyParallel
 
 object Service {
   
-    def initialize[F[_] : Async : NonEmptyParallel ](initialState: HistoryState): Resource[F,RouterDsl[F]] =  for {
+    def initialize[F[_] : Async : NonEmptyParallel ](initialState: HistoryState): Resource[F,RouterDsl[F]] = for {
         d <- Dispatcher[F]
         s <- Resource.eval(setupSignal[F](initialState))
-        _ <- Resource.make( assembleCallback[F](s,d).pure[F].flatTap(addHashChangeListener[F]) )( removeHashChangeListener[F] )
+        c <- Resource.make( assembleCallback[F](s,d).pure[F] )( removeHashChangeListener[F] )
+        _ <- Resource.eval( addHashChangeListener[F](c) )
     } yield RouterDsl.interpreter(s)
 
     private def setupSignal[F[_] : Async](initialState: HistoryState): F[SignallingRef[F,Tuple2[Path,BrowserHistoryState]]] = 
