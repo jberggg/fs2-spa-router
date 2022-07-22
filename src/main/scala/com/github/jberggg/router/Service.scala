@@ -1,6 +1,7 @@
 package com.github.jberggg.router
 
 import cats.syntax.all._
+import cats.effect.syntax.all._
 import cats.effect.kernel.{Async, Resource}
 import cats.effect.std.Dispatcher
 import org.http4s.Uri
@@ -10,40 +11,46 @@ import org.scalajs.dom.window
 import scala.scalajs.js
 import org.scalajs.dom.PopStateEvent
 import Domain._
-import cats.NonEmptyParallel
 
 object Service {
   
-    def initialize[F[_] : Async : NonEmptyParallel ](initialState: HistoryState): Resource[F,RouterDsl[F]] = for {
+    def createRouterDsl[F[_] : Async ](initialState: js.Any): Resource[F,RouterDsl[F]] = for {
         d <- Dispatcher[F]
         s <- Resource.eval(setupSignal[F](initialState))
-        c <- Resource.make( assembleCallback[F](s,d).pure[F] )( removeHashChangeListener[F] )
-        _ <- Resource.eval( addHashChangeListener[F](c) )
+        _ <- registerEventListener[F](d,s)
+        _ <- setupStatePusher[F](s)
     } yield RouterDsl.interpreter(s)
 
-    private def setupSignal[F[_] : Async](initialState: HistoryState): F[SignallingRef[F,Tuple2[Path,BrowserHistoryState]]] = 
+    def setupSignal[F[_] : Async ](initialState: js.Any): F[SignallingRef[F,Tuple2[Path,js.Any]]] = 
         Async[F]
         .delay( window.location.href )
-        .map( Uri.fromString(_).fold(
-            _   => Tuple2(Path.Root,initialState), // TODO: How to deal with parsin errors!?
-            uri => Tuple2(uri.path,initialState)
-        ))
+        .map( Uri.unsafeFromString )
+        .map( u => Tuple2(u.path, initialState) )
         .flatTap{ case (p,s) => Async[F].delay(window.history.replaceState(s.toJsObject,"",p.toString)) }
-        .flatMap{ case (p,s) => SignallingRef.apply[F,Tuple2[Path,BrowserHistoryState]](Tuple2.apply(p,s.asRight[UnhandledHistoryState])) }        
+        .flatMap{ case (p,s) => SignallingRef.apply[F,Tuple2[Path,js.Any]](Tuple2.apply(p,s)) }
 
-    private def assembleCallback[F[_] : Async ](s: SignallingRef[F, Tuple2[Path, BrowserHistoryState]], d: Dispatcher[F]) = (
+    def setupStatePusher[ F[_] : Async ](s: SignallingRef[F,Tuple2[Path,js.Any]]): Resource[F,Unit] = 
+        s.discrete
+        .evalMap{ case (p,st) => Async[F].delay( window.history.pushState( st.toJsObject, "", p.toString ) ) }
+        .compile
+        .drain
+        .background
+        .void
+
+    def registerEventListener[F[_] : Async](d: Dispatcher[F], s: SignallingRef[F,Tuple2[Path,js.Any]]): Resource[F,Unit] = 
+        Resource
+        .make( assembleCallback[F](s,d).pure[F] )( removeHashChangeListener[F] )
+        .evalMap( addHashChangeListener[F] )
+
+    private def assembleCallback[F[_] : Async ](s: SignallingRef[F, Tuple2[Path, js.Any]], d: Dispatcher[F]) = (
         (e: PopStateEvent) => d.unsafeRunAndForget{
             Async[F].delay(window.location.href)
-            .map(
-                Uri.fromString(_).fold(
-                    _   => Tuple2(Path.Root,e.state), // TODO: How to deal with parsin errors!?
-                    uri => Tuple2(uri.path,e.state)
-                ) match {
-                    case (p: Path, s: HistoryState) => Tuple2.apply(p,s.asRight[UnhandledHistoryState])
-                    case (p: Path, unknown) => Tuple2.apply(p,UnhandledHistoryState(unknown).asLeft[HistoryState])
-                }
-            )
-            .flatMap(s.set)
+            .map( Uri.unsafeFromString )
+            .map( u => Tuple2(u.path,e.state) )
+            .flatMap{
+                case t@(_, _: Object) => s.set(t)
+                case (_,_) => Async[F].delay( println(s"Unexpected history state encountered..."))
+            }
             .void
         }
     ): js.Function1[PopStateEvent,Unit]
