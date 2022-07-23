@@ -14,14 +14,14 @@ it yourself with `sbt publishLocal`.
 
 The router is built upon the [*History API*](https://developer.mozilla.org/en-US/docs/Web/API/History) 
 which allows to route on regular looking paths rather then a path section delimited
-by a `#`. When navigating from within the SPA app, the path and optional state is 
+by a `#`. 
+
+When navigating from within the SPA app, the path and optional state is 
 pushed to the *History API*. When the user presses the back button, the router will 
 receive the previous path and state from the *History API* which then can be used 
-to reconstruct the view the user wants to navigate to.
-
-The library makes no assumption about the state pushed to and received from the *History Api*.
-Thus it can be anything you want 
-[as long as](https://developer.mozilla.org/en-US/docs/Web/API/History_API/Working_with_the_History_API):
+to reconstruct the view the user wants to navigate to. The library makes no assumption
+about the state pushed to and received from the *History Api*. Thus it can be anything 
+you want [as long as](https://developer.mozilla.org/en-US/docs/Web/API/History_API/Working_with_the_History_API):
 
 > The state object can be anything that can be serialized.
 
