@@ -19,7 +19,7 @@ by a `#`.
 When navigating from within the SPA app, the path and state is pushed to the *History API*. 
 When the user presses the back button, the router will receive the previous path and state
 from the *History API* which then can be used  to reconstruct the view the user wants to navigate
-to. The library makes no assumption about the state pushed to and received from the *History Api*. 
+back to. The library makes no assumption about the state pushed to and received from the *History Api*. 
 Thus it can be anything you want [as long as](https://developer.mozilla.org/en-US/docs/Web/API/History_API/Working_with_the_History_API):
 
 > The state object can be anything that can be serialized.
