@@ -30,7 +30,7 @@ object RouterService {
         .map( Uri.unsafeFromString )
         .map( u => Tuple2(u.path, initialState) )
         .flatTap{ case (p,s) => Async[F].delay(window.history.replaceState(hasd.toHistoryApiState(s),"",p.toString)) } // set initial state in History API
-        .flatMap{ SignallingRef.apply[F,Tuple2[Path,S]] _ }
+        .flatMap{ SignallingRef.apply[F,Tuple2[Path,S]] }
 
     def createHistoryStatePusher[ F[_] : Async, S ](s: SignallingRef[F,Tuple2[Path,S]])(implicit hasd: HistoryApiStateDsl[S]): Resource[F,Unit] = 
         s.discrete
